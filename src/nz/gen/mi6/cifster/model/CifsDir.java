@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface CifsDir {
 
-	String getName();
+    String getName();
 
-	List<CifsDir> getChildren();
+    List<CifsDir> getChildren();
 }

@@ -2,40 +2,39 @@ package nz.gen.mi6.cifster;
 
 import nz.gen.mi6.cifster.model.CifsDir;
 import nz.gen.mi6.cifster.model.Model;
+import nz.gen.mi6.cifster.view.OnPathClickListener;
+import nz.gen.mi6.cifster.view.PathBar;
+import nz.gen.mi6.cifster.view.PathBarAdapter;
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.ViewGroup;
-import android.widget.Button;
 
 public class CifsterActivity extends Activity {
-	private Model m_model;
-	private ViewGroup m_pathBar;
+    private Model m_model;
+    private PathBar m_pathBar;
+    private PathBarAdapter m_pathBarAdapter;
 
-	/** Called when the activity is first created. */
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.main);
-		m_model = new Model();
-		// TODO: restore model state from bundle
+    /** Called when the activity is first created. */
+    @Override
+    public void onCreate(final Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+        m_model = new Model();
+        // TODO: restore model state from bundle
 
-		m_pathBar = (ViewGroup) findViewById(R.id.pathBar);
-		assert m_pathBar != null;
-		for (CifsDir dir : m_model.getCurrentDir().getChildren()) {
-			Button parentDirView = (Button) getLayoutInflater().inflate(
-					R.layout.path_button, null);
-			String name = dir.getName();
-			parentDirView.setText(name.toCharArray(), 0, name.length());
-			parentDirView.setOnClickListener(new OnClickListener() {
+        final OnPathClickListener listener = new OnPathClickListener() {
 
-				@Override
-				public void onClick(View v) {
-					// TODO Auto-generated method stub
+            @Override
+            public void onPathClick(final CifsDir path) {
+                // TODO Auto-generated method stub
 
-				}
-			});
-		}
-	}
+            }
+        };
+        m_pathBar = (PathBar) findViewById(R.id.pathBar);
+        assert m_pathBar != null;
+        m_pathBarAdapter = new PathBarAdapter(
+                m_model,
+                getLayoutInflater(),
+                listener);
+        m_pathBar.setAdapter(m_pathBarAdapter);
+    }
 }
