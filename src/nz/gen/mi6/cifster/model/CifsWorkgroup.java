@@ -9,7 +9,7 @@ public class CifsWorkgroup extends CifsSmbFile {
     }
 
     @Override
-    protected CifsDir createChild(SmbFile smb_file) {
+    protected CifsItem createChild(SmbFile smb_file) {
         // TODO Auto-generated method stub
         return new CifsServer(smb_file);
     }

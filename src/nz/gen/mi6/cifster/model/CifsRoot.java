@@ -7,14 +7,14 @@ import java.util.List;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
-public class CifsRoot implements CifsDir {
+public class CifsRoot implements CifsItem {
 
     public String getName() {
         return "/";
     }
 
-    public List<CifsDir> getChildren() {
-        List<CifsDir> children = new ArrayList<CifsDir>();
+    public List<CifsItem> getChildren() {
+        List<CifsItem> children = new ArrayList<CifsItem>();
         try {
             SmbFile smb_file = new SmbFile("smb://");
             for (SmbFile file : smb_file.listFiles()) {

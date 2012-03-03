@@ -6,7 +6,7 @@ import java.util.List;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
-abstract class CifsSmbFile implements CifsDir {
+abstract class CifsSmbFile implements CifsItem {
 
     private final SmbFile m_smb_file;
 
@@ -20,8 +20,8 @@ abstract class CifsSmbFile implements CifsDir {
     }
 
     @Override
-    public List<CifsDir> getChildren() {
-        List<CifsDir> children = new ArrayList<CifsDir>();
+    public List<CifsItem> getChildren() {
+        List<CifsItem> children = new ArrayList<CifsItem>();
         try {
             for (SmbFile file : m_smb_file.listFiles()) {
                 children.add(createChild(file));
@@ -33,5 +33,5 @@ abstract class CifsSmbFile implements CifsDir {
         return children;
     }
 
-    protected abstract CifsDir createChild(SmbFile smb_file);
+    protected abstract CifsItem createChild(SmbFile smb_file);
 }

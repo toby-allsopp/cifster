@@ -4,16 +4,14 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
-    <LinearLayout
+    <nz.gen.mi6.cifster.view.PathBar
         android:id="@+id/pathBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
-
-        <include layout="@layout/path_button" />
-    </LinearLayout>
+    </nz.gen.mi6.cifster.view.PathBar>
 
     <ListView
-        android:id="@+id/listView1"
+        android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
     </ListView>

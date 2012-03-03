@@ -1,14 +1,15 @@
 package nz.gen.mi6.cifster.view;
 
-import nz.gen.mi6.cifster.R;
-import nz.gen.mi6.cifster.model.CifsDir;
-import nz.gen.mi6.cifster.model.Model;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+
+import nz.gen.mi6.cifster.R;
+import nz.gen.mi6.cifster.model.CifsItem;
+import nz.gen.mi6.cifster.model.Model;
 
 public class PathBarAdapter extends BaseAdapter {
 
@@ -31,7 +32,7 @@ public class PathBarAdapter extends BaseAdapter {
     }
 
     @Override
-    public CifsDir getItem(final int position) {
+    public CifsItem getItem(final int position) {
         return m_model.getParentDirs().get(position);
     }
 
@@ -50,7 +51,7 @@ public class PathBarAdapter extends BaseAdapter {
             convertView = m_layoutInflater.inflate(R.layout.path_button, null);
         }
         final Button button = (Button) convertView;
-        final CifsDir item = getItem(position);
+        final CifsItem item = getItem(position);
         button.setOnClickListener(new OnClickListener() {
 
             @Override

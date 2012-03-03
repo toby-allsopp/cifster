@@ -5,23 +5,23 @@ import java.util.List;
 
 public class Model {
 
-    private final List<CifsDir> m_parentDirs;
-    private CifsDir m_currentDir;
+    private final List<CifsItem> m_parentDirs;
+    private CifsItem m_currentDir;
 
     public Model() {
-        m_parentDirs = new ArrayList<CifsDir>();
+        m_parentDirs = new ArrayList<CifsItem>();
         m_currentDir = new CifsRoot();
     }
 
-    public List<CifsDir> getParentDirs() {
+    public List<CifsItem> getParentDirs() {
         return m_parentDirs;
     }
 
-    public CifsDir getCurrentDir() {
+    public CifsItem getCurrentDir() {
         return m_currentDir;
     }
 
-    public void setCurrentDir(CifsDir currentDir) {
+    public void setCurrentDir(CifsItem currentDir) {
         m_parentDirs.add(m_currentDir);
         m_currentDir = currentDir;
     }

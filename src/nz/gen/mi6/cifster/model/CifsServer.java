@@ -9,7 +9,7 @@ public class CifsServer extends CifsSmbFile {
     }
 
     @Override
-    protected CifsDir createChild(SmbFile smb_file) {
+    protected CifsItem createChild(SmbFile smb_file) {
         return new CifsShare(smb_file);
     }
 

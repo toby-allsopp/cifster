@@ -4,5 +4,6 @@
     <string name="hello">Hello World, CifsterActivity!</string>
     <string name="app_name">Cifster</string>
     <string name="root">/</string>
+    <string name="badItem">[Unknown item]</string>
 
 </resources>
