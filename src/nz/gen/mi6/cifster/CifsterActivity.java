@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import nz.gen.mi6.cifster.model.CifsItem;
 import nz.gen.mi6.cifster.model.Model;
@@ -21,6 +22,7 @@ public class CifsterActivity extends Activity {
     private PathBar m_pathBar;
     private PathBarAdapter m_pathBarAdapter;
     private ListView m_listView;
+    private ProgressBar m_progressBar;
 
     /** Called when the activity is first created. */
     @Override
@@ -62,12 +64,15 @@ public class CifsterActivity extends Activity {
             }
         });
 
+        m_progressBar = (ProgressBar) findViewById(R.id.empty);
+
         startUpdatingList();
     }
 
     protected void startUpdatingList() {
 
         m_listView.setAdapter(null);
+        m_progressBar.setVisibility(View.VISIBLE);
         (new AsyncTask<Void, Void, List<CifsItem>>() {
 
             @Override
@@ -77,6 +82,7 @@ public class CifsterActivity extends Activity {
 
             @Override
             protected void onPostExecute(final List<CifsItem> result) {
+                m_progressBar.setVisibility(View.GONE);
                 m_listView.setAdapter(new CifsItemListAdapter(
                         getLayoutInflater(),
                         result));
