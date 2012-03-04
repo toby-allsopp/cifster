@@ -3,10 +3,13 @@ package nz.gen.mi6.cifster.view;
 import android.content.Context;
 import android.database.DataSetObserver;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 
 public class PathBar extends AdapterView<PathBarAdapter> {
+
+    private static final String LOG_TAG = "PathBar";
 
     public PathBar(final Context context, final AttributeSet attrs) {
         super(context, attrs);
@@ -20,12 +23,14 @@ public class PathBar extends AdapterView<PathBarAdapter> {
         public void onChanged() {
             // TODO Auto-generated method stub
             super.onChanged();
+            requestLayout();
         }
 
         @Override
         public void onInvalidated() {
             // TODO Auto-generated method stub
             super.onInvalidated();
+            requestLayout();
         }
 
     };
@@ -64,23 +69,43 @@ public class PathBar extends AdapterView<PathBarAdapter> {
             final int bottom) {
         super.onLayout(changed, left, top, right, bottom);
 
+        Log.d(LOG_TAG, "onLayout(" + changed + ", " + left + ", " + top + ", "
+                + right + ", " + bottom + ")");
         removeAllViewsInLayout();
         if (m_adapter == null) {
+            Log.d(LOG_TAG, "  no adapter - done.");
             return;
         }
-        for (int i = 0; i < m_adapter.getCount(); ++i) {
-            addViewInLayout(m_adapter.getView(i, null, null), i, null);
+        final int viewCount = m_adapter.getCount();
+        Log.d(LOG_TAG, "  viewCount = " + viewCount);
+        for (int i = 0; i < viewCount; ++i) {
+            final View view = m_adapter.getView(i, null, null);
+            final LayoutParams params = new LayoutParams(
+                    LayoutParams.WRAP_CONTENT,
+                    LayoutParams.WRAP_CONTENT);
+            addViewInLayout(view, i, params);
+            view.measure(MeasureSpec.makeMeasureSpec(
+                    getWidth(),
+                    MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(
+                    getHeight(),
+                    MeasureSpec.AT_MOST));
         }
 
         int x = 0;
-        for (int i = 0; i < getChildCount(); ++i) {
+        final int childCount = getChildCount();
+        Log.d(LOG_TAG, "  childCount = " + childCount);
+        for (int i = 0; i < childCount; ++i) {
             final View child = getChildAt(i);
-            child.layout(
+            final int width = child.getMeasuredWidth();
+            final int height = child.getMeasuredHeight();
+            Log.d(LOG_TAG, String.format(
+                    "  child %d: x=%d, width=%d, height=%d",
+                    i,
                     x,
-                    0,
-                    x + child.getMeasuredWidth(),
-                    child.getMeasuredHeight());
-            x += child.getMeasuredWidth();
+                    width,
+                    height));
+            child.layout(x, 0, x + width, height);
+            x += width;
         }
     }
 
@@ -90,15 +115,31 @@ public class PathBar extends AdapterView<PathBarAdapter> {
             final int heightMeasureSpec) {
         // TODO Auto-generated method stub
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        Log.d(
+                LOG_TAG,
+                String.format(
+                        "onMeasure(%s, %s)",
+                        MeasureSpec.toString(widthMeasureSpec),
+                        MeasureSpec.toString(heightMeasureSpec)));
+        if (m_adapter == null) {
+            Log.d(LOG_TAG, "  no adapter");
+        }
         int width = 0;
         int height = 0;
-        for (int i = 0; i < getChildCount(); ++i) {
-            final View child = getChildAt(i);
-            child.measure(widthMeasureSpec, heightMeasureSpec);
-            width += child.getMeasuredWidth();
-            height = Math.max(height, child.getMeasuredHeight());
+        final int viewCount = (m_adapter == null) ? 0 : m_adapter.getCount();
+        Log.d(LOG_TAG, "  viewCount = " + viewCount);
+        for (int i = 0; i < viewCount; ++i) {
+            Log.d(LOG_TAG, String.format(
+                    "  view %d: width=%d, height=%d",
+                    i,
+                    width,
+                    height));
+            final View view = m_adapter.getView(i, null, null);
+            view.measure(widthMeasureSpec, heightMeasureSpec);
+            width += view.getMeasuredWidth();
+            height = Math.max(height, view.getMeasuredHeight());
         }
+        Log.d(LOG_TAG, String.format("  width=%d, height=%d", width, height));
         setMeasuredDimension(width, height);
     }
-
 }

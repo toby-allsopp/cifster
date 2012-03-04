@@ -60,6 +60,7 @@ public class CifsterActivity extends Activity {
                 final CifsItem item = (CifsItem) m_listView.getAdapter().getItem(
                         position);
                 m_model.setCurrentDir(item);
+                m_pathBarAdapter.notifyDataSetChanged();
                 startUpdatingList();
             }
         });
