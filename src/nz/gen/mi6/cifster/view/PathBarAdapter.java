@@ -28,12 +28,16 @@ public class PathBarAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return m_model.getParentDirs().size();
+        return m_model.getParentDirs().size() + 1;
     }
 
     @Override
     public CifsItem getItem(final int position) {
-        return m_model.getParentDirs().get(position);
+        if (position < getCount() - 1) {
+            return m_model.getParentDirs().get(position);
+        } else {
+            return m_model.getCurrentDir();
+        }
     }
 
     @Override
@@ -60,6 +64,7 @@ public class PathBarAdapter extends BaseAdapter {
             }
         });
         button.setText(item.getName().toCharArray(), 0, item.getName().length());
+        button.setEnabled(position < getCount() - 1);
         return button;
     }
 }
