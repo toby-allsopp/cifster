@@ -10,7 +10,7 @@ public class Model {
 
     public Model() {
         m_parentDirs = new ArrayList<CifsItem>();
-        m_currentDir = new CifsRoot();
+        m_currentDir = new CifsSmbFile();
     }
 
     public List<CifsItem> getParentDirs() {
@@ -21,7 +21,7 @@ public class Model {
         return m_currentDir;
     }
 
-    public void setCurrentDir(CifsItem currentDir) {
+    public void setCurrentDir(final CifsItem currentDir) {
         m_parentDirs.add(m_currentDir);
         m_currentDir = currentDir;
     }

@@ -1,16 +1,27 @@
 package nz.gen.mi6.cifster.model;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
-abstract class CifsSmbFile implements CifsItem {
+class CifsSmbFile implements CifsItem {
 
     private final SmbFile m_smb_file;
 
-    public CifsSmbFile(SmbFile smb_file) {
+    public CifsSmbFile() {
+        try {
+            m_smb_file = new SmbFile("smb://");
+        } catch (final MalformedURLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public CifsSmbFile(final SmbFile smb_file) {
         m_smb_file = smb_file;
     }
 
@@ -20,18 +31,48 @@ abstract class CifsSmbFile implements CifsItem {
     }
 
     @Override
-    public List<CifsItem> getChildren() {
-        List<CifsItem> children = new ArrayList<CifsItem>();
+    public Type getType() {
         try {
-            for (SmbFile file : m_smb_file.listFiles()) {
-                children.add(createChild(file));
+            switch (m_smb_file.getType()) {
+            case SmbFile.TYPE_WORKGROUP:
+                return Type.WORKGROUP;
+            case SmbFile.TYPE_SERVER:
+                return Type.SERVER;
+            case SmbFile.TYPE_SHARE:
+                return Type.SHARE;
+            case SmbFile.TYPE_FILESYSTEM:
+            case SmbFile.TYPE_COMM:
+            case SmbFile.TYPE_NAMED_PIPE:
+            case SmbFile.TYPE_PRINTER:
+                try {
+                    if (m_smb_file.isDirectory()) {
+                        return Type.DIRECTORY;
+                    } else {
+                        return Type.FILE;
+                    }
+                } catch (final SmbException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
-        } catch (SmbException e) {
+        } catch (final SmbException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return Type.FILE;
+    }
+
+    @Override
+    public List<CifsItem> getChildren() {
+        final List<CifsItem> children = new ArrayList<CifsItem>();
+        try {
+            for (final SmbFile file : m_smb_file.listFiles()) {
+                children.add(new CifsSmbFile(file));
+            }
+        } catch (final SmbException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return children;
     }
-
-    protected abstract CifsItem createChild(SmbFile smb_file);
 }
