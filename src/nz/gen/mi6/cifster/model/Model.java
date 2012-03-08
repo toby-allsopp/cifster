@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Model {
 
-    private final List<CifsItem> m_parentDirs;
+    private List<CifsItem> m_parentDirs;
     private CifsItem m_currentDir;
 
     public Model() {
@@ -21,9 +21,17 @@ public class Model {
         return m_currentDir;
     }
 
-    public void setCurrentDir(final CifsItem currentDir) {
+    public void enterChild(final CifsItem child) {
         m_parentDirs.add(m_currentDir);
-        m_currentDir = currentDir;
+        m_currentDir = child;
     }
 
+    public void rewindToParent(final int index) {
+        m_currentDir = m_parentDirs.get(index);
+        m_parentDirs = m_parentDirs.subList(0, index);
+    }
+
+    public void rewindToParent(final CifsItem parent) {
+        rewindToParent(m_parentDirs.indexOf(parent));
+    }
 }

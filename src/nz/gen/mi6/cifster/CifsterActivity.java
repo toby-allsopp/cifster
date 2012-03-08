@@ -36,7 +36,8 @@ public class CifsterActivity extends Activity {
 
             @Override
             public void onPathClick(final CifsItem path) {
-                m_model.setCurrentDir(path);
+                m_model.rewindToParent(path);
+                m_pathBarAdapter.notifyDataSetChanged();
                 startUpdatingList();
             }
         };
@@ -59,7 +60,7 @@ public class CifsterActivity extends Activity {
                     final long id) {
                 final CifsItem item = (CifsItem) m_listView.getAdapter().getItem(
                         position);
-                m_model.setCurrentDir(item);
+                m_model.enterChild(item);
                 m_pathBarAdapter.notifyDataSetChanged();
                 startUpdatingList();
             }
