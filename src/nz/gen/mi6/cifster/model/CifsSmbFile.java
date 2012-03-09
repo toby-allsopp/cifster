@@ -7,6 +7,9 @@ import java.util.List;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 class CifsSmbFile implements CifsItem {
 
     private final SmbFile m_smb_file;
@@ -75,4 +78,34 @@ class CifsSmbFile implements CifsItem {
         }
         return children;
     }
+
+    @Override
+    public int describeContents() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(final Parcel dest, final int flags) {
+        dest.writeString(m_smb_file.getPath());
+    }
+
+    public static final Parcelable.Creator<CifsSmbFile> CREATOR = new Creator<CifsSmbFile>() {
+
+        @Override
+        public CifsSmbFile createFromParcel(final Parcel source) {
+            try {
+                return new CifsSmbFile(new SmbFile(source.readString()));
+            } catch (final MalformedURLException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        public CifsSmbFile[] newArray(final int size) {
+            return new CifsSmbFile[size];
+        }
+
+    };
 }

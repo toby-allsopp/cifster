@@ -29,8 +29,11 @@ public class CifsterActivity extends Activity {
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        m_model = new Model();
-        // TODO: restore model state from bundle
+        if (savedInstanceState != null) {
+            m_model = savedInstanceState.getParcelable("model");
+        } else {
+            m_model = new Model();
+        }
 
         final OnPathClickListener listener = new OnPathClickListener() {
 
@@ -69,6 +72,12 @@ public class CifsterActivity extends Activity {
         m_progressBar = (ProgressBar) findViewById(R.id.empty);
 
         startUpdatingList();
+    }
+
+    @Override
+    protected void onSaveInstanceState(final Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable("model", m_model);
     }
 
     protected void startUpdatingList() {

@@ -2,7 +2,9 @@ package nz.gen.mi6.cifster.model;
 
 import java.util.List;
 
-public interface CifsItem {
+import android.os.Parcelable;
+
+public interface CifsItem extends Parcelable {
 
     public enum Type {
         ROOT,
