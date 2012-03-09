@@ -2,6 +2,7 @@ package nz.gen.mi6.cifster.view;
 
 import android.content.Context;
 import android.database.DataSetObserver;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -107,6 +108,7 @@ public class PathBar extends AdapterView<PathBarAdapter> {
             child.layout(x, 0, x + width, height);
             x += width;
         }
+        requestRectangleOnScreen(new Rect(x, 0, x, 0));
     }
 
     @Override
