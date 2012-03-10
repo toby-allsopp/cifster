@@ -1,5 +1,6 @@
 package nz.gen.mi6.cifster.model;
 
+import java.io.InputStream;
 import java.util.List;
 
 import android.os.Parcelable;
@@ -20,4 +21,6 @@ public interface CifsItem extends Parcelable {
     Type getType();
 
     List<CifsItem> getChildren();
+
+    InputStream getInputStream();
 }

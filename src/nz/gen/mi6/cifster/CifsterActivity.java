@@ -3,16 +3,24 @@ package nz.gen.mi6.cifster;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
 import nz.gen.mi6.cifster.model.CifsItem;
 import nz.gen.mi6.cifster.model.Model;
+import nz.gen.mi6.cifster.operation.Operation;
+import nz.gen.mi6.cifster.operation.DownloadOperation;
 import nz.gen.mi6.cifster.view.OnPathClickListener;
 import nz.gen.mi6.cifster.view.PathBar;
 import nz.gen.mi6.cifster.view.PathBarAdapter;
@@ -23,6 +31,7 @@ public class CifsterActivity extends Activity {
     private PathBarAdapter m_pathBarAdapter;
     private ListView m_listView;
     private ProgressBar m_progressBar;
+    private CifsItem m_operatedUponItem;
 
     /** Called when the activity is first created. */
     @Override
@@ -68,6 +77,7 @@ public class CifsterActivity extends Activity {
                 startUpdatingList();
             }
         });
+        registerForContextMenu(m_listView);
 
         m_progressBar = (ProgressBar) findViewById(R.id.empty);
 
@@ -78,6 +88,62 @@ public class CifsterActivity extends Activity {
     protected void onSaveInstanceState(final Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable("model", m_model);
+    }
+
+    @Override
+    public void onCreateContextMenu(
+            final ContextMenu menu,
+            final View v,
+            final ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        final MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.item_menu, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(final MenuItem item) {
+        final AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+        m_operatedUponItem = (CifsItem) m_listView.getAdapter().getItem(
+                info.position);
+        switch (item.getItemId()) {
+        case R.id.copyItem:
+            startActivityForResult(new Intent(
+                    this,
+                    DestinationPickerActivity.class), 1);
+            // copyItem(info.id);
+            return true;
+        case R.id.deleteItem:
+            // deleteItem(info.id);
+            return true;
+        default:
+            return super.onContextItemSelected(item);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(
+            final int requestCode,
+            final int resultCode,
+            final Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+        case 1:
+            if (resultCode == RESULT_OK) {
+                final String destination = data.getStringExtra(DestinationPickerActivity.RESULT_EXTRA);
+                if (destination != null) {
+                    final Intent copyCommand = new Intent(
+                            this,
+                            BackgroundOperationService.class);
+                    final Operation operation = new DownloadOperation(
+                            m_operatedUponItem,
+                            destination);
+                    copyCommand.putExtra(
+                            BackgroundOperationService.OPERATION_EXTRA,
+                            operation);
+                    startService(copyCommand);
+                }
+            }
+        }
     }
 
     protected void startUpdatingList() {

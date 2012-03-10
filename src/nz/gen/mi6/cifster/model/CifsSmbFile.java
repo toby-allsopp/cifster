@@ -1,11 +1,14 @@
 package nz.gen.mi6.cifster.model;
 
+import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
+import jcifs.smb.SmbFileInputStream;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -77,6 +80,23 @@ class CifsSmbFile implements CifsItem {
             e.printStackTrace();
         }
         return children;
+    }
+
+    @Override
+    public InputStream getInputStream() {
+        try {
+            return new SmbFileInputStream(m_smb_file);
+        } catch (final SmbException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (final MalformedURLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (final UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override

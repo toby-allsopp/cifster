@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="hello">Hello World, CifsterActivity!</string>
     <string name="app_name">Cifster</string>
-    <string name="root">/</string>
     <string name="badItem">[Unknown item]</string>
+    <string name="DELETE_MENU_ITEM">Delete</string>
+    <string name="COPYING_FROM_TO_NOTIFICATION">Copying %1$s to %2$s</string>
 
 </resources>
