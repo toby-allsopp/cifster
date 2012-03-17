@@ -9,17 +9,26 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Parcel;
 import android.util.Log;
 import android.util.Pair;
 
+import nz.gen.mi6.cifster.CifsterActivity;
 import nz.gen.mi6.cifster.R;
 import nz.gen.mi6.cifster.model.CifsItem;
 import nz.gen.mi6.cifster.operation.StreamCopier.Listener;
 
 public class DownloadOperation implements Operation {
 
+    private static final String LOG_TAG = "DownloadOperation";
+    private static final AtomicInteger m_nextNotificationId = new AtomicInteger();
     private final CifsItem m_item;
     private final String m_dest;
 
@@ -29,12 +38,40 @@ public class DownloadOperation implements Operation {
     }
 
     @Override
+    public Pair<Integer, Notification> getNotification(final Context context) {
+        final NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        final int id = m_nextNotificationId.getAndIncrement();
+        final Notification notification = new Notification(
+                R.drawable.ic_launcher,
+                context.getString(R.string.STARTING_DOWNLOAD_NOTIFICATION_TICKER),
+                System.currentTimeMillis());
+        final Intent operationProgressIntent = new Intent(
+                context,
+                CifsterActivity.class);
+        final PendingIntent contentIntent = PendingIntent.getActivity(
+                context,
+                0,
+                operationProgressIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        notification.setLatestEventInfo(
+                context,
+                getNotificationTitle(context),
+                getNotificationText(context),
+                contentIntent);
+        notification.setLatestEventInfo(
+                context,
+                getNotificationTitle(context),
+                getNotificationText(context),
+                contentIntent);
+        notificationManager.notify(id, notification);
+        return Pair.create(id, notification);
+    }
+
     public CharSequence getNotificationTitle(final Context context) {
         // TODO Auto-generated method stub
         return null;
     }
 
-    @Override
     public CharSequence getNotificationText(final Context context) {
         return context.getString(R.string.COPYING_FROM_TO_NOTIFICATION);
     }

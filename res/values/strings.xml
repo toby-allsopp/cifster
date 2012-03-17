@@ -5,5 +5,6 @@
     <string name="badItem">[Unknown item]</string>
     <string name="DELETE_MENU_ITEM">Delete</string>
     <string name="COPYING_FROM_TO_NOTIFICATION">Copying %1$s to %2$s</string>
+    <string name="STARTING_DOWNLOAD_NOTIFICATION_TICKER">Starting download</string>
 
 </resources>
