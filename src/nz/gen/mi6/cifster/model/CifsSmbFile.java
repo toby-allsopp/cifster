@@ -12,8 +12,11 @@ import jcifs.smb.SmbFileInputStream;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 class CifsSmbFile implements CifsItem {
+
+    private static final String LOG_TAG = "CifsSmbFile";
 
     private final SmbFile m_smb_file;
 
@@ -77,7 +80,7 @@ class CifsSmbFile implements CifsItem {
             }
         } catch (final SmbException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            Log.e(LOG_TAG, "Error listing " + m_smb_file, e);
         }
         return children;
     }
@@ -97,6 +100,21 @@ class CifsSmbFile implements CifsItem {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public long getSize() {
+        try {
+            return m_smb_file.length();
+        } catch (final SmbException e) {
+            Log.e(LOG_TAG, "Error getting size of " + m_smb_file, e);
+            return 0;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return m_smb_file.toString();
     }
 
     @Override

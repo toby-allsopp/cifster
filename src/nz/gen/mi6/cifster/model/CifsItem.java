@@ -23,4 +23,6 @@ public interface CifsItem extends Parcelable {
     List<CifsItem> getChildren();
 
     InputStream getInputStream();
+
+    long getSize();
 }

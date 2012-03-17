@@ -6,14 +6,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.LinkedList;
-import java.util.Queue;
-
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import android.content.Context;
 import android.os.Parcel;
+import android.util.Log;
+import android.util.Pair;
 
 import nz.gen.mi6.cifster.R;
 import nz.gen.mi6.cifster.model.CifsItem;
+import nz.gen.mi6.cifster.operation.StreamCopier.Listener;
 
 public class DownloadOperation implements Operation {
 
@@ -36,34 +39,92 @@ public class DownloadOperation implements Operation {
         return context.getString(R.string.COPYING_FROM_TO_NOTIFICATION);
     }
 
+    private long processNode(
+            final CifsItem item,
+            final File destDir,
+            final List<Pair<File, CifsItem>> itemsToCopy) {
+        long size = 0;
+        switch (item.getType()) {
+        case ROOT:
+            // Ignore the root dir
+            break;
+        case WORKGROUP:
+        case SERVER:
+        case SHARE:
+        case DIRECTORY:
+            final File subDir = new File(destDir, item.getName());
+            itemsToCopy.add(Pair.create(subDir, (CifsItem) null));
+            for (final CifsItem child : item.getChildren()) {
+                size += processNode(child, subDir, itemsToCopy);
+            }
+            break;
+        case FILE:
+            itemsToCopy.add(Pair.create(destDir, item));
+            size = item.getSize();
+            break;
+        }
+        return size;
+    }
+
+    private class Progress implements Listener {
+        private final long mTotalSize;
+        private final long mStartTimeNanos;
+        private long mCopiedSize = 0;
+
+        public Progress(final long totalSize) {
+            mTotalSize = totalSize;
+            mStartTimeNanos = System.nanoTime();
+        }
+
+        @Override
+        public void onProgress(final long numBytes) {
+            mCopiedSize += numBytes;
+            final double percent = (double) mCopiedSize / mTotalSize * 100;
+            final long elapsedTimeNanos = System.nanoTime() - mStartTimeNanos;
+            final double speedBytesPerNanosecond = (double) mCopiedSize
+                    / elapsedTimeNanos;
+            final long ttgNanos = (long) ((mTotalSize - mCopiedSize) / speedBytesPerNanosecond);
+            final String msg = String.format(
+                    "Copied %d of %d (%.2f%%) @ %.2fkB/s - ETA: %s",
+                    mCopiedSize,
+                    mTotalSize,
+                    percent,
+                    speedBytesPerNanosecond * 1000 * 1000,
+                    new Date(System.currentTimeMillis() + ttgNanos / 1000
+                            / 1000));
+            Log.d(LOG_TAG, msg);
+        }
+    }
+
     @Override
     public void run() {
+        // First, build up the list of files to copy. This allows us to give a
+        // percentage complete because we can add up the total size of all the
+        // files.
+        final List<Pair<File, CifsItem>> itemsToCopy = new ArrayList<Pair<File, CifsItem>>();
+        final long totalSize = processNode(
+                m_item,
+                new File(m_dest),
+                itemsToCopy);
+
+        // Then, go through and do the copying.
         final StreamCopier copier = new StreamCopier();
-        final Queue<CifsItem> items = new LinkedList<CifsItem>();
-        items.add(m_item);
-        CifsItem item;
-        File destDir = new File(m_dest);
-        while ((item = items.poll()) != null) {
-            switch (item.getType()) {
-            case ROOT:
-                // Ignore the root dir
-                break;
-            case WORKGROUP:
-            case SERVER:
-            case SHARE:
-            case DIRECTORY:
-                destDir = new File(destDir, item.getName());
+        final Progress progress = new Progress(totalSize);
+        for (final Pair<File, CifsItem> dirAndItem : itemsToCopy) {
+            final File destDir = dirAndItem.first;
+            final CifsItem item = dirAndItem.second;
+            if (item == null) {
+                Log.i(LOG_TAG, "mkdir: " + destDir);
                 destDir.mkdir();
-                items.addAll(item.getChildren());
-                break;
-            case FILE:
+            } else {
+                Log.i(LOG_TAG, "copy: " + item + " -> " + destDir);
                 final InputStream in = item.getInputStream();
                 try {
                     final OutputStream out = new FileOutputStream(new File(
                             destDir,
                             item.getName()));
                     try {
-                        copier.copy(in, out);
+                        copier.copy(in, out, progress);
                     } finally {
                         out.close();
                     }
@@ -81,7 +142,6 @@ public class DownloadOperation implements Operation {
                         e.printStackTrace();
                     }
                 }
-                break;
             }
         }
     }
