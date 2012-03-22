@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.util.Log;
 import android.util.Pair;
 
-import nz.gen.mi6.cifster.operation.Operation;
+import nz.gen.mi6.cifster.operation.NotifiableOperation;
 
 public class BackgroundOperationService extends IntentService {
 
@@ -21,15 +21,15 @@ public class BackgroundOperationService extends IntentService {
 
     @Override
     protected void onHandleIntent(final Intent intent) {
-        final Operation operation = intent.getParcelableExtra(OPERATION_EXTRA);
+        final NotifiableOperation operation = intent.getParcelableExtra(OPERATION_EXTRA);
         if (operation == null) {
             Log.e(LOG_TAG, "No operation specified in intent: " + intent);
             return;
         }
 
-        final Pair<Integer, Notification> idAndNotification = operation.getNotification(getApplicationContext());
+        final Pair<Integer, Notification> idAndNotification = operation.createNotification(getApplicationContext());
         startForeground(idAndNotification.first, idAndNotification.second);
-        operation.run();
+        operation.run(getApplicationContext());
         stopForeground(false);
     }
 }

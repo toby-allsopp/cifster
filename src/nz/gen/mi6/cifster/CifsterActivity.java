@@ -19,8 +19,8 @@ import android.widget.ProgressBar;
 
 import nz.gen.mi6.cifster.model.CifsItem;
 import nz.gen.mi6.cifster.model.Model;
-import nz.gen.mi6.cifster.operation.Operation;
 import nz.gen.mi6.cifster.operation.DownloadOperation;
+import nz.gen.mi6.cifster.operation.NotfiableDownloadOperation;
 import nz.gen.mi6.cifster.view.OnPathClickListener;
 import nz.gen.mi6.cifster.view.PathBar;
 import nz.gen.mi6.cifster.view.PathBarAdapter;
@@ -134,12 +134,12 @@ public class CifsterActivity extends Activity {
                     final Intent copyCommand = new Intent(
                             this,
                             BackgroundOperationService.class);
-                    final Operation operation = new DownloadOperation(
+                    final DownloadOperation operation = new DownloadOperation(
                             m_operatedUponItem,
                             destination);
                     copyCommand.putExtra(
                             BackgroundOperationService.OPERATION_EXTRA,
-                            operation);
+                            new NotfiableDownloadOperation(operation));
                     startService(copyCommand);
                 }
             }

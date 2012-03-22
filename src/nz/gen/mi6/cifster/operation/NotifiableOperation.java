@@ -5,10 +5,10 @@ import android.content.Context;
 import android.os.Parcelable;
 import android.util.Pair;
 
-public interface Operation extends Parcelable {
+public interface NotifiableOperation extends Parcelable {
 
-    Pair<Integer, Notification> getNotification(Context context);
+    Pair<Integer, Notification> createNotification(Context context);
 
-    void run();
+    void run(Context context);
 
 }

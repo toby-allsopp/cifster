@@ -9,26 +9,48 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
 import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
-import android.util.Pair;
 
-import nz.gen.mi6.cifster.CifsterActivity;
-import nz.gen.mi6.cifster.R;
 import nz.gen.mi6.cifster.model.CifsItem;
-import nz.gen.mi6.cifster.operation.StreamCopier.Listener;
 
-public class DownloadOperation implements Operation {
+public class DownloadOperation implements Parcelable {
+
+    private static class ItemToCopy {
+        public CifsItem m_item;
+        public File m_destDir;
+        public long m_size;
+
+        public ItemToCopy(
+                final CifsItem item,
+                final File destDir,
+                final long size) {
+            super();
+            m_item = item;
+            m_destDir = destDir;
+            m_size = size;
+        }
+    }
+
+    public interface Listener {
+        void onStartPrepare();
+
+        void onFinishPrepare();
+
+        void onStartCopy(long totalNumFiles, long totalSize);
+
+        void onStartFile(CifsItem source, File destination, long fileSize);
+
+        void onProgress(long sizeCopied);
+
+        void onFinishFile();
+
+        void onFinishCopy();
+    }
 
     private static final String LOG_TAG = "DownloadOperation";
-    private static final AtomicInteger m_nextNotificationId = new AtomicInteger();
     private final CifsItem m_item;
     private final String m_dest;
 
@@ -37,49 +59,10 @@ public class DownloadOperation implements Operation {
         m_dest = destination;
     }
 
-    @Override
-    public Pair<Integer, Notification> getNotification(final Context context) {
-        final NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        final int id = m_nextNotificationId.getAndIncrement();
-        final Notification notification = new Notification(
-                R.drawable.ic_launcher,
-                context.getString(R.string.STARTING_DOWNLOAD_NOTIFICATION_TICKER),
-                System.currentTimeMillis());
-        final Intent operationProgressIntent = new Intent(
-                context,
-                CifsterActivity.class);
-        final PendingIntent contentIntent = PendingIntent.getActivity(
-                context,
-                0,
-                operationProgressIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-        notification.setLatestEventInfo(
-                context,
-                getNotificationTitle(context),
-                getNotificationText(context),
-                contentIntent);
-        notification.setLatestEventInfo(
-                context,
-                getNotificationTitle(context),
-                getNotificationText(context),
-                contentIntent);
-        notificationManager.notify(id, notification);
-        return Pair.create(id, notification);
-    }
-
-    public CharSequence getNotificationTitle(final Context context) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public CharSequence getNotificationText(final Context context) {
-        return context.getString(R.string.COPYING_FROM_TO_NOTIFICATION);
-    }
-
     private long processNode(
             final CifsItem item,
             final File destDir,
-            final List<Pair<File, CifsItem>> itemsToCopy) {
+            final List<ItemToCopy> itemsToCopy) {
         long size = 0;
         switch (item.getType()) {
         case ROOT:
@@ -90,26 +73,28 @@ public class DownloadOperation implements Operation {
         case SHARE:
         case DIRECTORY:
             final File subDir = new File(destDir, item.getName());
-            itemsToCopy.add(Pair.create(subDir, (CifsItem) null));
+            itemsToCopy.add(new ItemToCopy(null, subDir, size));
             for (final CifsItem child : item.getChildren()) {
                 size += processNode(child, subDir, itemsToCopy);
             }
             break;
         case FILE:
-            itemsToCopy.add(Pair.create(destDir, item));
             size = item.getSize();
+            itemsToCopy.add(new ItemToCopy(item, destDir, size));
             break;
         }
         return size;
     }
 
-    private class Progress implements Listener {
+    private class Progress implements StreamCopier.Listener {
         private final long mTotalSize;
         private final long mStartTimeNanos;
         private long mCopiedSize = 0;
+        private final Listener mListener;
 
-        public Progress(final long totalSize) {
+        public Progress(final long totalSize, final Listener listener) {
             mTotalSize = totalSize;
+            mListener = listener;
             mStartTimeNanos = System.nanoTime();
         }
 
@@ -130,36 +115,40 @@ public class DownloadOperation implements Operation {
                     new Date(System.currentTimeMillis() + ttgNanos / 1000
                             / 1000));
             Log.d(LOG_TAG, msg);
+            mListener.onProgress(numBytes);
         }
     }
 
-    @Override
-    public void run() {
+    public void run(final Listener listener) {
         // First, build up the list of files to copy. This allows us to give a
         // percentage complete because we can add up the total size of all the
         // files.
-        final List<Pair<File, CifsItem>> itemsToCopy = new ArrayList<Pair<File, CifsItem>>();
+        listener.onStartPrepare();
+        final List<ItemToCopy> itemsToCopy = new ArrayList<ItemToCopy>();
         final long totalSize = processNode(
                 m_item,
                 new File(m_dest),
                 itemsToCopy);
+        listener.onFinishPrepare();
 
         // Then, go through and do the copying.
         final StreamCopier copier = new StreamCopier();
-        final Progress progress = new Progress(totalSize);
-        for (final Pair<File, CifsItem> dirAndItem : itemsToCopy) {
-            final File destDir = dirAndItem.first;
-            final CifsItem item = dirAndItem.second;
-            if (item == null) {
-                Log.i(LOG_TAG, "mkdir: " + destDir);
-                destDir.mkdir();
+        final Progress progress = new Progress(totalSize, listener);
+        listener.onStartCopy(itemsToCopy.size(), totalSize);
+        for (final ItemToCopy i : itemsToCopy) {
+            if (i.m_item == null) {
+                Log.i(LOG_TAG, "mkdir: " + i.m_destDir);
+                listener.onStartFile(null, i.m_destDir, i.m_size);
+                i.m_destDir.mkdir();
             } else {
-                Log.i(LOG_TAG, "copy: " + item + " -> " + destDir);
-                final InputStream in = item.getInputStream();
+                Log.i(LOG_TAG, "copy: " + i.m_item + " -> " + i.m_destDir);
+                final File destination = new File(
+                        i.m_destDir,
+                        i.m_item.getName());
+                listener.onStartFile(i.m_item, destination, i.m_size);
+                final InputStream in = i.m_item.getInputStream();
                 try {
-                    final OutputStream out = new FileOutputStream(new File(
-                            destDir,
-                            item.getName()));
+                    final OutputStream out = new FileOutputStream(destination);
                     try {
                         copier.copy(in, out, progress);
                     } finally {
@@ -180,7 +169,9 @@ public class DownloadOperation implements Operation {
                     }
                 }
             }
+            listener.onFinishFile();
         }
+        listener.onFinishCopy();
     }
 
     @Override
